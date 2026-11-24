@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProductTile from '../../components/ProductTile.astro';
+import { smellsLikeIndex, priceLabel } from '../../lib/data';
+import { waLink } from '../../lib/site';
+
+export function getStaticPaths() {
+  return smellsLikeIndex()
+    .filter((l) => l.items.some((p) => !/Designer|Niche/.test(p.type)))
+    .map((l) => ({ params: { slug: l.slug }, props: { l } }));
+}
+const { l } = Astro.props;
+const alts = l.items.filter((p: any) => !/Designer|Niche/.test(p.type));
+const cheapest = alts[0];
+---
+<Base
+  title={`Smells like ${l.name}, in Jos`}
+  description={`Love ${l.name}? Scents by Biba has ${alts.length} inspired ${alts.length === 1 ? 'alternative' : 'alternatives'} from ${priceLabel(cheapest).replace('About ', '')} in Jos. Order on WhatsApp, delivered across Nigeria.`}
+>
+  <section class="wrap head">
+    <p class="small"><a class="link" href="/smells-like/">All comparisons</a></p>
+    <div class="ornament"><i></i></div>
+    <h1>Smells like {l.name}</h1>
+    <p class="muted">These perfumes are inspired by {l.name}: a similar style of scent, made by a different house, at a much lower price. They’re not the original and aren’t linked to its brand.</p>
+  </section>
+  <section class="wrap">
+    <div class="grid">{alts.map((p: any) => <ProductTile p={p} headingLevel="h2" />)}</div>
+    <p class="ask">Want the original instead? <a class="link" href={waLink(`Hi Biba, can you get me the original ${l.name}? What would it cost?`)} target="_blank" rel="noopener">Ask Biba for a price</a>.</p>
+  </section>
+</Base>
+<style>
+  .head { padding-block: clamp(2.5rem, 6vw, 4rem) 2.5rem; display: grid; gap: 0.9rem; justify-items: center; text-align: center; }
+  .head h1 { font-size: var(--step-4); }
+  .ask { margin: 3rem auto 0; text-align: center; font-family: var(--serif); font-size: 1.3rem; font-style: italic; }
+</style>

@@ -1,0 +1,83 @@
+---
+// The hero picture: three bottles on a marble plinth inside an arched window,
+// with rose, citrus and a curl of oud smoke.
+---
+<svg class="hero-scene" viewBox="0 0 560 640" role="img" aria-label="Three perfume bottles on a marble plinth in an arched window, with a rose, a citrus slice and a curl of smoke">
+  <defs>
+    <linearGradient id="h-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a1a16" />
+      <stop offset=".55" stop-color="#5a3626" />
+      <stop offset="1" stop-color="#b9875a" />
+    </linearGradient>
+    <radialGradient id="h-glow" cx=".5" cy=".62" r=".5">
+      <stop offset="0" stop-color="#f6e3b8" stop-opacity=".85" />
+      <stop offset=".5" stop-color="#e2b77a" stop-opacity=".25" />
+      <stop offset="1" stop-color="#e2b77a" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="h-marble" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbf8f3" />
+      <stop offset=".6" stop-color="#ece4d8" />
+      <stop offset="1" stop-color="#d9cdbb" />
+    </linearGradient>
+    <linearGradient id="h-marble-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffdf9" />
+      <stop offset="1" stop-color="#efe7da" />
+    </linearGradient>
+    <linearGradient id="h-rose" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d9727a" />
+      <stop offset="1" stop-color="#8e2f3c" />
+    </linearGradient>
+    <linearGradient id="h-leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7d8b5c" />
+      <stop offset="1" stop-color="#3e4a2c" />
+    </linearGradient>
+    <clipPath id="h-arch"><path d="M60 640V250C60 130 160 40 280 40s220 90 220 210v390z" /></clipPath>
+  </defs>
+
+  <path d="M48 640V250C48 122 154 28 280 28s232 94 232 222v390" fill="none" stroke="url(#g-gold)" stroke-width="2" />
+  <g clip-path="url(#h-arch)">
+    <rect width="560" height="640" fill="url(#h-sky)" />
+    <circle cx="280" cy="400" r="260" fill="url(#h-glow)" />
+    <g fill="none" stroke="#f3dfb6" stroke-linecap="round" opacity=".55">
+      <path d="M300 300c-30-30 30-50 0-90s30-60 6-100" stroke-width="2" />
+      <path d="M318 296c-18-24 24-40 2-70s22-44 6-70" stroke-width="1.2" opacity=".7" />
+      <path d="M282 304c-22-20 14-36-6-60" stroke-width="1.2" opacity=".6" />
+    </g>
+    <g stroke="#f3dfb6" stroke-opacity=".18" fill="none">
+      <path d="M60 120h440M60 200h440" />
+    </g>
+  </g>
+
+  <!-- plinth -->
+  <path d="M86 486h388l-14 26H100z" fill="url(#h-marble-top)" />
+  <rect x="100" y="512" width="360" height="128" fill="url(#h-marble)" />
+  <path d="M120 540c40 10 60 40 110 36s70 20 120 10M300 520c10 30 50 40 60 80M160 600c30-14 70-10 90 6" stroke="#b8a891" stroke-width="1" fill="none" opacity=".5" />
+  <path d="M100 512h360" stroke="url(#g-gold)" stroke-width="2.5" />
+
+  <!-- bottles -->
+  <use href="#b-flacon" x="118" y="296" width="120" height="220" style="--liq:url(#liq-sweet);--cap:url(#g-gold)" />
+  <use href="#b-oud" x="200" y="196" width="170" height="312" style="--liq:url(#liq-oud);--cap:url(#g-gold)" />
+  <use href="#b-orb" x="336" y="330" width="100" height="184" style="--liq:url(#liq-floral);--cap:url(#g-gold)" />
+
+  <!-- citrus slice -->
+  <g transform="translate(408 478)">
+    <circle r="30" fill="#f4e08a" stroke="#d9b54a" stroke-width="3" />
+    <circle r="24" fill="#f9ebb0" />
+    {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+      const a = (i * Math.PI) / 4;
+      return <path d={`M0 0L${22 * Math.cos(a)} ${22 * Math.sin(a)}`} stroke="#e2c25c" stroke-width="2" />;
+    })}
+    <circle r="3" fill="#e2c25c" />
+  </g>
+
+  <!-- rose and leaves -->
+  <g transform="translate(150 484)">
+    <path d="M-60 6c20-30 50-34 70-18-22 18-48 24-70 18z" fill="url(#h-leaf)" />
+    <path d="M20 10c24-20 52-16 62 0-24 10-46 12-62 0z" fill="url(#h-leaf)" />
+    <circle r="34" fill="url(#h-rose)" />
+    <path d="M-22-12c10-16 34-16 40 2-8 14-28 18-40-2z" fill="#c45563" />
+    <path d="M-12-6c6-10 20-10 24 2-6 8-18 10-24-2z" fill="#a63e4b" />
+    <path d="M-26 6c4 16 22 24 40 18M-30-4c-4 18 8 32 28 34M10 26c16-2 26-14 24-30" stroke="#7e2633" stroke-width="2" fill="none" stroke-linecap="round" />
+    <path d="M-4-4c4-4 10-2 10 4" stroke="#7e2633" stroke-width="2" fill="none" stroke-linecap="round" />
+  </g>
+</svg>
