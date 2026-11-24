@@ -1,0 +1,99 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProductTile from '../../components/ProductTile.astro';
+import Meter from '../../components/Meter.astro';
+import WaIcon from '../../components/WaIcon.astro';
+import { perfumes, similar, priceLabel, orderMessage, availabilityLabel, slugify, type Perfume } from '../../lib/data';
+import { SITE, waLink } from '../../lib/site';
+import { bottleSvg } from '../../lib/bottle';
+
+export function getStaticPaths() {
+  return perfumes.map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+const { p } = Astro.props as { p: Perfume };
+const like = p.smellsLike && !/style|confirm/i.test(p.smellsLike) ? p.smellsLike.replace(/\s*\(.*\)$/, '') : '';
+const more = similar(p, 4);
+const who = p.gender === 'Unisex' ? 'anyone' : p.gender === 'Men' ? 'him' : 'her';
+const title = `${p.name}${p.brand ? ` by ${p.brand}` : ''} in Jos`;
+const desc = `${p.name}${p.brand ? ` by ${p.brand}` : ''}: ${p.family.replace(/ · /g, ', ').toLowerCase()} perfume for ${who}${p.notes ? ` with ${p.notes.toLowerCase()}` : ''}. ${priceLabel(p)} at Scents by Biba, Jos. Order on WhatsApp.`;
+const availNote = {
+  'in-store': 'Biba posted this recently. Message her to check today’s stock.',
+  'sold-before': 'Biba has sold this before. Message her to check if it’s back in stock.',
+  'order-in': 'Biba orders this in for you. The price shown is an estimate; she confirms the final price and delivery date on WhatsApp before you pay.',
+}[p.availability];
+const jsonLd = p.availability === 'order-in' ? undefined : {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: p.name,
+  ...(p.brand ? { brand: { '@type': 'Brand', name: p.brand } } : {}),
+  description: p.description,
+  offers: { '@type': 'Offer', priceCurrency: 'NGN', price: p.price, url: new URL(`/p/${p.slug}/`, SITE.url).href },
+};
+---
+<Base title={title} description={desc} jsonLd={jsonLd}>
+  <article class="wrap product">
+    <div class={`product-art glow-${p.group}`}>
+      {p.photo
+        ? <img class={p.photoCutout ? 'cutout' : 'scene'} src={p.photo} alt={`${p.name} bottle`} />
+        : <Fragment set:html={bottleSvg(p.slug, p.type, p.group, p.gender, `Illustration of a ${p.family.split(' · ')[0].toLowerCase()} perfume bottle`)} />}
+    </div>
+    <div class="product-info">
+      <p class="crumb"><a href={`/shop/?f=${p.group}`}>{p.family.split(' · ')[0]} perfumes</a></p>
+      <h1>{p.name}</h1>
+      {p.brand && <p class="brand">{p.brand}{p.size ? `, ${p.size}ml` : ''}</p>}
+      <p class="lead">{p.description}</p>
+      <div class="buy">
+        <p class="price big">{priceLabel(p)}</p>
+        <p class="avail">{availabilityLabel[p.availability]}. {availNote}</p>
+        <a class="btn btn-noir" href={waLink(orderMessage(p))} target="_blank" rel="noopener"><WaIcon />Order on WhatsApp</a>
+        <p class="small muted">{SITE.delivery}, or collect from {SITE.addressShort}.</p>
+      </div>
+      <dl class="facts">
+        <div><dt>Scent</dt><dd>{p.family.replace(/ · /g, ', ')}</dd></div>
+        {p.notes && <div><dt>Notes</dt><dd>{p.notes}</dd></div>}
+        <div><dt>For</dt><dd>{who === 'anyone' ? 'Anyone' : who === 'him' ? 'Him' : 'Her'}</dd></div>
+        {p.occasions.length > 0 && <div><dt>Wear it for</dt><dd>{p.occasions.join(', ')}</dd></div>}
+        {like && <div><dt>Smells like</dt><dd><a class="link" href={`/smells-like/${slugify(like)}/`}>{like}</a></dd></div>}
+        {p.longevity > 0 && <div><dt>Lasts</dt><dd><Meter value={p.longevity} label="Longevity" /></dd></div>}
+        {p.projection > 0 && <div><dt>Projects</dt><dd><Meter value={p.projection} label="Projection" /></dd></div>}
+      </dl>
+    </div>
+  </article>
+
+  {more.length > 0 && (
+    <section class="section wrap" aria-labelledby="similar">
+      <div class="section-head"><div class="ornament"><i></i></div><h2 id="similar">You may also love</h2></div>
+      <div class="grid">{more.map((q) => <ProductTile p={q} />)}</div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .product { display: grid; gap: 2rem; padding-block: clamp(2rem, 5vw, 4rem) 1rem; }
+  .product-art {
+    display: grid; place-items: end center; aspect-ratio: 4 / 5; max-height: 40rem; border-radius: 999px 999px 0 0; overflow: hidden;
+    background: radial-gradient(110% 70% at 50% 85%, var(--glow) 0%, var(--porcelain) 72%); border: 1px solid var(--line); position: relative;
+  }
+  .product-art :global(.bottle) { width: 48%; height: auto; margin-bottom: 7%; }
+  .product-art :global(.bottle-mini) { width: 72%; margin-bottom: 2%; }
+  .product-art img.scene { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .product-art img.cutout { position: relative; width: auto; max-width: 56%; height: 64%; object-fit: contain; object-position: bottom; margin-bottom: 8%; filter: drop-shadow(0 22px 18px rgba(52, 34, 18, .22)); }
+  .product-info { display: grid; gap: 1rem; align-content: start; }
+  .crumb { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .crumb a { color: var(--gold-deep); text-decoration: none; }
+  .product-info h1 { font-size: var(--step-4); }
+  .brand { color: var(--ink-soft); letter-spacing: 0.05em; }
+  .lead { font-family: var(--serif); font-style: italic; font-size: 1.5rem; line-height: 1.3; }
+  .buy { display: grid; gap: 0.7rem; padding-block: 1.25rem; border-block: 1px solid var(--line); margin-block: 0.5rem; }
+  .price.big { font-size: 1.6rem; }
+  .avail { font-size: 0.92rem; color: var(--ink-soft); }
+  .buy .btn { justify-self: start; }
+  .facts { margin: 0; display: grid; }
+  .facts div { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+  .facts dt { font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); padding-top: 0.15rem; }
+  .facts dd { margin: 0; }
+  @media (min-width: 56rem) {
+    .product { grid-template-columns: 1fr 1fr; gap: 4.5rem; align-items: start; }
+    .product-art { position: sticky; top: 8rem; }
+  }
+</style>

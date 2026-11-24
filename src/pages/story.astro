@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, waLink } from '../lib/site';
+---
+<Base title="Our story" description="Scents by Biba is a perfume shop in Jos run by Blessing since 2020, named after her daughter Abiba.">
+  <article class="wrap story">
+    <div class="ornament"><i></i></div>
+    <h1>Your favourite perfume vendor in Jos</h1>
+    <div class="copy">
+      <p>Hi, I’m Blessing. I started Scents by Biba in 2020, selling perfumes to friends and followers on Instagram. The name comes from my daughter, Abiba.</p>
+      <p>Five years on, we have a shop at Thilda Centre in Zarmangada, we deliver all over Nigeria, and the shelves are mostly Lattafa and other Arabian perfume houses. I stock them because they last in our weather and they let you smell expensive without spending like it. I also bring in designer originals, perfume oils, minis and body mists.</p>
+      <p>If you’re not sure what to buy, tell me what you like and your budget, and I’ll point you to the right bottle.</p>
+    </div>
+    <div class="actions">
+      <a class="btn btn-noir" href={waLink('Hi Blessing, I need help choosing a perfume.')} target="_blank" rel="noopener">Ask Blessing on WhatsApp</a>
+      <a class="link" href={SITE.instagram} target="_blank" rel="noopener">Follow on Instagram</a>
+    </div>
+  </article>
+</Base>
+<style>
+  .story { padding-block: clamp(3rem, 7vw, 5rem); display: grid; gap: 1.75rem; max-width: 46rem; justify-items: center; text-align: center; }
+  .story h1 { font-size: var(--step-4); }
+  .copy { display: grid; gap: 1.25rem; font-family: var(--serif); font-size: 1.45rem; line-height: 1.5; justify-items: center; }
+  .actions { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; justify-content: center; }
+</style>

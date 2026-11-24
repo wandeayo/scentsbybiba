@@ -1,0 +1,199 @@
+---
+import Base from '../layouts/Base.astro';
+import AskShop from '../components/AskShop.astro';
+import ProductTile from '../components/ProductTile.astro';
+import MoodIcon from '../components/MoodIcon.astro';
+import { perfumes, smellsLikeIndex, priceLabel } from '../lib/data';
+import { bottleSvg } from '../lib/bottle';
+import { GROUPS } from '../lib/families';
+import { SITE, naira } from '../lib/site';
+
+const inStore = perfumes
+  .filter((p) => p.availability === 'in-store' && p.type !== 'Home' && !/name to confirm|assorted/i.test(p.name))
+  .slice(0, 8);
+
+const designers = perfumes.filter((p) => /Designer|Niche/.test(p.type));
+function original(name: string) {
+  const n = name.toLowerCase();
+  return designers.find((d) => n.includes(d.name.toLowerCase().replace(/ (edp|edt)$/, '')) && n.includes(d.brand.toLowerCase().split(' ')[0]));
+}
+const likes = smellsLikeIndex()
+  .filter((l) => !/^Lattafa/.test(l.name))
+  .map((l) => {
+    const alt = l.items
+      .filter((p) => !/Designer|Niche|Mini|mist|spray|Oil/i.test(p.type))
+      .sort((a, b) => (a.availability === 'order-in' ? 1 : 0) - (b.availability === 'order-in' ? 1 : 0) || (a.photo ? 0 : 1) - (b.photo ? 0 : 1) || a.price - b.price)[0];
+    return { ...l, alt, orig: original(l.name) };
+  })
+  .filter((l) => l.alt && l.orig)
+  .slice(0, 4);
+
+const counts = Object.fromEntries(GROUPS.map((g) => [g.id, perfumes.filter((p) => p.group === g.id && p.type !== 'Home').length]));
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Store',
+  name: SITE.name,
+  url: SITE.url,
+  telephone: '+' + SITE.whatsapp,
+  address: { '@type': 'PostalAddress', streetAddress: 'Shop 6, Thilda Centre, Dadin Kowa, Zarmangada roundabout', addressLocality: 'Jos', addressRegion: 'Plateau', addressCountry: 'NG' },
+  openingHours: 'Mo-Sa 10:00-17:00',
+  sameAs: [SITE.instagram],
+};
+---
+<Base title="Scents by Biba" description="Fine perfumes in Jos: Lattafa, Arabian, designer and oil perfumes. Tell us what you’d love to smell like and order on WhatsApp. Delivery across Nigeria in 1 to 2 days." jsonLd={jsonLd}>
+  <AskShop />
+
+  <section class="section wrap" aria-labelledby="instore">
+    <div class="section-head">
+      <div class="ornament"><i></i></div>
+      <h2 id="instore">In the boutique now</h2>
+      <p>Recently on Biba’s shelves. Message her to check today’s stock.</p>
+    </div>
+    <div class="grid">
+      {inStore.map((p) => <ProductTile p={p} />)}
+    </div>
+    <p class="more"><a class="btn btn-line" href="/shop/?a=in-store">See the whole collection</a></p>
+  </section>
+
+  <section class="likes-band" aria-labelledby="likes">
+    <div class="wrap section">
+      <div class="section-head">
+        <div class="ornament"><i></i></div>
+        <h2 id="likes">The scent you love, at a price you’ll love more</h2>
+        <p>Inspired perfumes that share the mood of a designer original. Each is its own perfume, made by a different house.</p>
+      </div>
+      <ul class="likes">
+        {likes.map((l) => (
+          <li>
+            <a href={`/smells-like/${l.slug}/`}>
+              <div class="pair">
+                <div class="pair-item">
+                  <Fragment set:html={bottleSvg(l.orig!.slug, l.orig!.type, l.orig!.group, l.orig!.gender)} />
+                  <p class="pair-label">If you love</p>
+                  <p class="pair-name">{l.name}</p>
+                  <p class="pair-price">about {naira(l.orig!.price)}</p>
+                </div>
+                <div class="pair-item">
+                  {l.alt!.photo && l.alt!.photoCutout
+                    ? <img class="pair-photo" src={l.alt!.photo} alt="" loading="lazy" />
+                    : <Fragment set:html={bottleSvg(l.alt!.slug, l.alt!.type, l.alt!.group, l.alt!.gender)} />}
+                  <p class="pair-label">Try</p>
+                  <p class="pair-name">{l.alt!.name}</p>
+                  <p class="pair-price gold">{priceLabel(l.alt!)}</p>
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="more"><a class="btn btn-gold" href="/smells-like/">Find your favourite’s match</a></p>
+    </div>
+  </section>
+
+  <section class="section wrap" aria-labelledby="mood">
+    <div class="section-head">
+      <div class="ornament"><i></i></div>
+      <h2 id="mood">Shop by mood</h2>
+    </div>
+    <ul class="moods">
+      {GROUPS.map((g) => (
+        <li>
+          <a class="mood" href={`/shop/?f=${g.id}`}>
+            <span class={`mood-disc glow-${g.id}`}><MoodIcon mood={g.id} /></span>
+            <h3>{g.label}</h3>
+            <p>{g.blurb}</p>
+            <span class="small muted">{counts[g.id]} perfumes</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="story-band" aria-labelledby="story">
+    <div class="wrap story">
+      <div class="lattice" aria-hidden="true"></div>
+      <div class="story-copy">
+        <p class="italic kicker">The house</p>
+        <h2 id="story">Hi, I’m Blessing.</h2>
+        <p>I started Scents by Biba in Jos in 2020 and named it after my daughter, Abiba. Most of what I sell is Lattafa and other Arabian houses, because they last in our heat and they don’t cost a fortune. If you can’t find what you’re looking for here, send me a message. I’ll find it.</p>
+        <p class="sig italic">Blessing, founder</p>
+        <a class="link" href="/story/">Read our story</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap visit" aria-labelledby="visit">
+    <div class="section-head">
+      <div class="ornament"><i></i></div>
+      <h2 id="visit">Come and smell them first</h2>
+    </div>
+    <div class="visit-cols">
+      <div>
+        <h3>The boutique</h3>
+        <p>{SITE.address}</p>
+      </div>
+      <div>
+        <h3>Opening hours</h3>
+        <p>{SITE.hours}</p>
+      </div>
+      <div>
+        <h3>Delivery</h3>
+        <p>{SITE.delivery}. Biba confirms the fee for your area before you pay.</p>
+      </div>
+    </div>
+    <p class="more"><a class="btn btn-line" href={SITE.mapUrl} target="_blank" rel="noopener">Get directions</a></p>
+  </section>
+</Base>
+
+<style>
+  .more { display: flex; justify-content: center; margin: 2.5rem auto 0; max-width: none; }
+
+  .likes-band { background: var(--noir); color: var(--ivory); }
+  .likes-band .section-head p { color: rgba(247,242,234,.7); }
+  .likes { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); }
+  .likes a { display: block; text-decoration: none; color: inherit; border: 1px solid rgba(227,205,155,.28); padding: 1.75rem 1rem 1.5rem; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)); transition: border-color .3s; }
+  .likes a:hover { border-color: var(--gold); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .pair-item { display: grid; justify-items: center; text-align: center; gap: 0.2rem; }
+  .pair-item :global(.bottle) { width: 5.5rem; height: auto; margin-bottom: 0.75rem; }
+  .pair-photo { height: 10rem; width: auto; max-width: 8rem; object-fit: contain; object-position: bottom; margin-bottom: 0.75rem; filter: drop-shadow(0 10px 14px rgba(0,0,0,.45)); }
+  .pair-item + .pair-item { border-left: 1px solid rgba(227,205,155,.25); }
+  .pair-label { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-light); }
+  .pair-name { font-family: var(--serif); font-size: 1.45rem; line-height: 1.15; }
+  .pair-price { font-size: 0.9rem; color: rgba(247,242,234,.65); }
+  .pair-price.gold { color: var(--gold-light); font-weight: 500; font-size: 1rem; }
+
+  .moods { list-style: none; margin: 0; padding: 0; display: grid; gap: 2.25rem 1.5rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+  .mood { display: grid; justify-items: center; text-align: center; gap: 0.5rem; text-decoration: none; color: var(--ink); }
+  .mood-disc { width: 9rem; height: 9rem; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, var(--porcelain) 0%, var(--glow) 100%); border: 1px solid var(--line); color: var(--gold-deep); margin-bottom: 0.5rem; transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+  .mood-disc :global(.mood-icon) { width: 62%; height: auto; }
+  .mood:hover .mood-disc { transform: translateY(-4px); }
+  .mood h3 { font-size: 1.6rem; }
+  .mood p { color: var(--ink-soft); font-size: 0.95rem; max-width: 26ch; }
+
+  .story-band { background: var(--sand); }
+  .story { display: grid; gap: 2.5rem; padding-block: clamp(3.5rem, 8vw, 6rem); align-items: center; }
+  @media (min-width: 54rem) { .story { grid-template-columns: 1fr 1.2fr; gap: 5rem; } }
+  .lattice {
+    aspect-ratio: 4 / 5; max-height: 30rem; width: 100%; border-radius: 999px 999px 0 0; background-color: var(--noir);
+    background-image:
+      linear-gradient(45deg, transparent 47%, rgba(227,205,155,.5) 48%, rgba(227,205,155,.5) 52%, transparent 53%),
+      linear-gradient(-45deg, transparent 47%, rgba(227,205,155,.5) 48%, rgba(227,205,155,.5) 52%, transparent 53%),
+      radial-gradient(circle at 50% 50%, rgba(227,205,155,.35) 0 6%, transparent 7%);
+    background-size: 44px 44px, 44px 44px, 44px 44px;
+    box-shadow: inset 0 0 0 10px var(--noir), inset 0 0 0 11px var(--gold);
+  }
+  .story-copy { display: grid; gap: 1.1rem; }
+  .story-copy .kicker { color: var(--gold-deep); font-size: 1.25rem; }
+  .story-copy h2 { font-size: var(--step-4); }
+  .story-copy p:not(.kicker):not(.sig) { font-size: 1.08rem; }
+  .sig { font-size: 1.3rem; color: var(--gold-deep); }
+
+  .visit-cols { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); text-align: center; }
+  .visit-cols > div { display: grid; gap: 0.5rem; justify-items: center; padding-inline: 1rem; }
+  .visit-cols > div + div { border-left: 1px solid var(--line); }
+  @media (max-width: 50rem) { .visit-cols > div + div { border-left: 0; border-top: 1px solid var(--line); padding-top: 2rem; } }
+  .visit-cols h3 { font-size: 1.5rem; }
+  .visit-cols p { color: var(--ink-soft); }
+</style>

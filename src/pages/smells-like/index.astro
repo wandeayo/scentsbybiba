@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import { smellsLikeIndex, priceLabel } from '../../lib/data';
+const all = smellsLikeIndex().filter((l) => l.items.some((p) => !/Designer|Niche/.test(p.type)));
+---
+<Base title="Perfumes that smell like designer scents" description="Affordable perfumes in Jos inspired by Creed Aventus, Baccarat Rouge 540, Dior Sauvage, Armani My Way and more. Prices from Scents by Biba.">
+  <section class="wrap head">
+    <div class="ornament"><i></i></div>
+    <h1>The scent you love, priced for Jos</h1>
+    <p class="muted">Pick the designer perfume you love. These are the inspired versions Biba sells or can order in. Each one is its own perfume, not the original.</p>
+  </section>
+  <section class="wrap">
+    <ul class="index">
+      {all.map((l) => {
+        const alts = l.items.filter((p) => !/Designer|Niche/.test(p.type));
+        return (
+          <li>
+            <a href={`/smells-like/${l.slug}/`}>
+              <span class="name">{l.name}</span>
+              <span class="muted small">{alts.length} {alts.length === 1 ? 'option' : 'options'} from {priceLabel(alts[0]).replace('About ', '')}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+</Base>
+<style>
+  .head { padding-block: clamp(2.5rem, 6vw, 4rem) 2.5rem; display: grid; gap: 0.9rem; justify-items: center; text-align: center; }
+  .head h1 { font-size: var(--step-4); }
+  .index { list-style: none; margin: 0; padding: 0; columns: 20rem; column-gap: 3rem; }
+  .index li { break-inside: avoid; border-bottom: 1px solid var(--line); }
+  .index a { display: grid; gap: 0.1rem; padding: 1rem 0; text-decoration: none; color: var(--ink); }
+  .index .name { font-family: var(--serif); font-weight: 500; font-size: 1.55rem; line-height: 1.15; }
+  .index a:hover .name { color: var(--gold-deep); }
+</style>

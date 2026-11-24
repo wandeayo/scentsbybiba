@@ -1,0 +1,194 @@
+---
+import { perfumes } from '../lib/data';
+import type { Item } from '../lib/search';
+import HeroScene from './HeroScene.astro';
+
+const items: Item[] = perfumes.map((p) => ({
+  s: p.slug, n: p.name, b: p.brand, g: p.gender, f: p.group, fl: p.family,
+  o: p.occasions.join(','), k: p.notes, l: p.smellsLike, t: p.type, p: p.price,
+  a: p.availability, lo: p.longevity,
+  ...(p.photo && p.photoCutout ? { ph: p.photo } : {}),
+}));
+
+const starters = [
+  'Smells like Creed Aventus',
+  'A gift for her under ₦20k',
+  'Fresh for the hot weather',
+  'Sweet and girly',
+  'Oud for a wedding',
+];
+---
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker italic">Perfumery in Jos, delivered across Nigeria</p>
+      <h1>Fine fragrance, found for you.</h1>
+      <p class="lede">Lattafa and Arabian perfumes, designer originals, oils and minis, chosen and tested by Biba. Tell us what you’d love to smell like.</p>
+
+      <form class="ask-form" role="search" action="/" method="get">
+        <label class="ask-label" for="q">Describe the scent you’re looking for</label>
+        <div class="ask-row">
+          <input id="q" name="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Something fresh for work, under ₦30k" />
+          <button class="btn btn-noir" type="submit">Find my scent</button>
+        </div>
+        <p class="ask-starters">
+          <span class="muted">Or try</span>
+          {starters.map((s, i) => (
+            <>
+              <button type="button" class="starter" data-q={s}>{s}</button>{i < starters.length - 1 && <span class="sep" aria-hidden="true">/</span>}
+            </>
+          ))}
+        </p>
+      </form>
+    </div>
+    <div class="hero-art">
+      <HeroScene />
+    </div>
+  </div>
+</section>
+
+<section class="ask-results" aria-live="polite" hidden>
+  <div class="wrap">
+    <div class="ask-head">
+      <div class="ornament"><i></i></div>
+      <h2 class="ask-summary"></h2>
+      <div class="ask-refine" aria-label="Refine these picks">
+        <button type="button" data-r="cheaper">Cheaper</button>
+        <button type="button" data-r="sweet">Sweeter</button>
+        <button type="button" data-r="fresh">Fresher</button>
+        <button type="button" data-r="him">For him</button>
+        <button type="button" data-r="her">For her</button>
+      </div>
+    </div>
+    <div class="grid ask-list"></div>
+  </div>
+</section>
+<script type="application/json" id="catalog" set:html={JSON.stringify(items)} />
+
+<script>
+  import { rank, parse, type Item } from '../lib/search';
+  import { bottleSvg } from '../lib/bottle';
+
+  const WA = '2347063221856';
+  const items: Item[] = JSON.parse(document.getElementById('catalog')!.textContent || '[]');
+  const form = document.querySelector<HTMLFormElement>('.ask-form')!;
+  const input = document.getElementById('q') as HTMLInputElement;
+  const box = document.querySelector<HTMLElement>('.ask-results')!;
+  const list = box.querySelector<HTMLElement>('.ask-list')!;
+  const summary = box.querySelector<HTMLElement>('.ask-summary')!;
+
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  const naira = (n: number) => '₦' + n.toLocaleString('en-NG');
+  const priceText = (it: Item) => (it.a === 'order-in' ? 'About ' : '') + naira(it.p);
+  const tagText: Record<string, string> = { 'in-store': 'In the boutique', 'sold-before': '', 'order-in': 'Order-in' };
+  const wa = (msg: string) => `https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
+
+  function render(q: string) {
+    const query = q.trim();
+    if (!query) { box.hidden = true; return; }
+    const { parsed, hits } = rank(query, items, 4);
+    box.hidden = false;
+    if (!hits.length) {
+      const extra = parsed.max && parsed.max < 17000 ? ' Full bottles start around ₦17,000, but minis, oils and mists fit that budget.' : '';
+      summary.textContent = `Nothing matched “${query}” exactly.`;
+      list.innerHTML = `<div class="ask-empty"><p>${esc(extra)} Biba can find it for you. Send her what you’re looking for and she’ll reply with options.</p>
+        <a class="btn btn-noir" href="${wa(`Hi Biba, I’m looking for ${query}. Can you help?`)}" target="_blank" rel="noopener">Ask Biba on WhatsApp</a></div>`;
+      return;
+    }
+    summary.textContent = hits.length === 1 ? 'Biba’s pick for you' : `${hits.length} picks for “${query}”`;
+    list.innerHTML = hits.map(({ item: it, why }) => {
+      const msg = `Hi Biba, I was looking for "${query}" on your website and saw ${it.n}${it.b ? ` by ${it.b}` : ''} (${priceText(it)}). Is it available?`;
+      const tag = tagText[it.a];
+      return `<article class="tile reveal">
+        <a class="tile-art glow-${it.f}" href="/p/${it.s}/" tabindex="-1" aria-hidden="true">${tag ? `<span class="tile-tag">${tag}</span>` : ''}${it.ph ? `<img class="cutout" src="${it.ph}" alt="" loading="lazy">` : bottleSvg(it.s, it.t, it.f, it.g)}</a>
+        <div class="tile-body">
+          <h3><a href="/p/${it.s}/">${esc(it.n)}</a></h3>
+          ${it.b ? `<p class="tile-brand">${esc(it.b)}</p>` : ''}
+          <p class="tile-family">${esc(why.join(', '))}</p>
+          <p class="price">${priceText(it)}</p>
+          <a class="tile-order" href="${wa(msg)}" target="_blank" rel="noopener">Order on WhatsApp</a>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  function run(q: string, scroll = true) {
+    input.value = q;
+    render(q);
+    const url = new URL(location.href);
+    if (q) url.searchParams.set('q', q); else url.searchParams.delete('q');
+    { try { history.replaceState(null, '', url); } catch { /* sandboxed preview */ } }
+    if (scroll && q) box.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  form.addEventListener('submit', (e) => { e.preventDefault(); run(input.value); });
+  document.querySelectorAll<HTMLButtonElement>('.starter').forEach((b) => b.addEventListener('click', () => run(b.dataset.q!)));
+
+  document.querySelectorAll<HTMLButtonElement>('.ask-refine button').forEach((b) =>
+    b.addEventListener('click', () => {
+      let q = input.value.trim();
+      const r = b.dataset.r!;
+      if (r === 'cheaper') {
+        const p = parse(q);
+        const prices = [...list.querySelectorAll('.price')].map((el) => Number(el.textContent!.replace(/\D/g, '')));
+        const cap = Math.max(5000, Math.round(((p.max ?? Math.max(...prices, 30000)) * 0.75) / 1000) * 1000);
+        q = q.replace(/(under|below|less than|budget|max)\s*(of\s*)?₦?\s*[\d,.]+k?/i, '').replace(/₦\s*[\d,.]+k?|\b\d{2,3}k\b/gi, '').replace(/\s*,\s*$/, '').trim();
+        q = `${q}, under ₦${cap / 1000}k`.replace(/^,\s*/, '');
+      } else if (r === 'him' || r === 'her') {
+        q = q.replace(/,?\s*for (him|her)\b/gi, '').trim();
+        q = `${q}, for ${r}`.replace(/^,\s*/, '');
+      } else if (!new RegExp(`\\b${r}`, 'i').test(q)) {
+        q = `${r} ${q}`.trim();
+      }
+      run(q, false);
+    }));
+
+  const initial = new URL(location.href).searchParams.get('q');
+  if (initial) run(initial, false);
+</script>
+
+<style>
+  .hero { background: var(--ivory); padding-block: clamp(2rem, 5vw, 4rem) clamp(2.5rem, 6vw, 5rem); }
+  .hero-grid { display: grid; gap: 2rem; align-items: center; }
+  @media (min-width: 60rem) { .hero-grid { grid-template-columns: 1.05fr 1fr; gap: 4rem; } }
+  .hero-copy { display: grid; gap: 1.25rem; }
+  .kicker { font-size: 1.25rem; color: var(--gold-deep); }
+  .hero h1 { font-size: var(--step-4); font-weight: 500; line-height: 0.98; letter-spacing: -0.02em; }
+  .lede { font-size: 1.08rem; color: var(--ink-soft); max-width: 46ch; }
+  .ask-form { display: grid; gap: 0.75rem; margin-top: 0.75rem; }
+  .ask-label { font-family: var(--serif); font-size: 1.35rem; font-style: italic; }
+  .ask-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .ask-row input {
+    flex: 1 1 16rem; min-width: 0; min-height: 52px; padding: 0.7rem 1rem; border: 1px solid var(--ink); border-radius: 0;
+    background: var(--porcelain); color: var(--ink); font: 400 1.05rem var(--sans);
+  }
+  .ask-row input::placeholder { color: #9b8f83; }
+  .ask-row input:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .ask-row .btn { min-height: 52px; }
+  .ask-starters { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; font-size: 0.92rem; max-width: none; }
+  .starter { background: none; border: 0; padding: 0.35rem 0; font: inherit; color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 4px; }
+  .starter:hover { color: var(--gold-deep); }
+  .sep { color: var(--gold); }
+  .hero-art { max-width: 34rem; width: 100%; justify-self: center; }
+  @media (max-width: 59.99rem) {
+    .hero-grid { gap: 1.25rem; }
+    .hero-copy { display: contents; }
+    .kicker { order: 1; } .hero h1 { order: 2; } .hero-art { order: 3; max-width: 19rem; } .lede { order: 4; } .ask-form { order: 5; }
+    .sep { display: none; }
+    .ask-starters { gap: 0.2rem 1rem; }
+    .ask-row .btn { flex: 1 1 100%; }
+  }
+  .hero-art :global(.hero-scene) { width: 100%; height: auto; }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-art { animation: heroIn 1.1s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes heroIn { from { opacity: 0; transform: translateY(18px); } }
+  }
+
+  .ask-results { background: var(--porcelain); border-block: 1px solid var(--line); padding-block: clamp(2.5rem, 6vw, 4.5rem); scroll-margin-top: 7rem; }
+  .ask-head { display: grid; justify-items: center; text-align: center; gap: 1rem; margin-bottom: 2.25rem; }
+  .ask-summary { font-size: var(--step-3); }
+  .ask-refine { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+  .ask-refine button { min-height: 40px; padding: 0.4rem 1.1rem; border: 1px solid var(--line); background: transparent; font: 500 0.85rem var(--sans); letter-spacing: 0.04em; color: var(--ink); cursor: pointer; }
+  .ask-refine button:hover { border-color: var(--ink); }
+  .ask-list :global(.ask-empty) { grid-column: 1 / -1; display: grid; gap: 1.25rem; justify-items: center; text-align: center; }
+</style>

@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import WaIcon from '../components/WaIcon.astro';
+import { SITE, waLink } from '../lib/site';
+---
+<Base title="Visit the store and delivery" description={`Scents by Biba, ${SITE.address}. Open ${SITE.hours}. ${SITE.delivery}.`}>
+  <section class="wrap visit">
+    <div class="ornament"><i></i></div>
+    <h1>Visit the boutique, or have it delivered</h1>
+    <div class="cols">
+      <div class="block">
+        <h2>The boutique</h2>
+        <p>{SITE.address}</p>
+        <p>{SITE.hours}</p>
+        <a class="btn btn-line" href={SITE.mapUrl} target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+      <div class="block">
+        <h2>Delivery</h2>
+        <p>{SITE.delivery}, depending on where you are.</p>
+        <p>Delivery isn’t free. Biba tells you the fee for your area on WhatsApp before you pay, so there are no surprises.</p>
+        <a class="btn btn-noir" href={waLink('Hi Biba, how much is delivery to ')} target="_blank" rel="noopener"><WaIcon />Ask about delivery to your area</a>
+      </div>
+      <div class="block">
+        <h2>How ordering works</h2>
+        <ol>
+          <li>Find a perfume here and tap “Order on WhatsApp”. Your message is written for you.</li>
+          <li>Biba confirms stock, the final price and delivery.</li>
+          <li>You pay, and it’s on its way. Delivery takes 1 to 2 days.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</Base>
+<style>
+  .visit { padding-block: clamp(2.5rem, 6vw, 4rem) 1rem; display: grid; gap: 2.5rem; }
+  .visit > h1, .visit > .ornament { justify-self: center; text-align: center; }
+  .visit h1 { font-size: var(--step-4); }
+  .cols { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+  .block { background: var(--porcelain); border: 1px solid var(--line); padding: 2rem 1.75rem; display: grid; gap: 0.85rem; align-content: start; }
+  .block h2 { font-size: 1.9rem; }
+  .block .btn { justify-self: start; }
+  ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.6rem; }
+</style>

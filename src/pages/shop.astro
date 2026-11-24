@@ -1,0 +1,110 @@
+---
+import Base from '../layouts/Base.astro';
+import ProductTile from '../components/ProductTile.astro';
+import { perfumes } from '../lib/data';
+import { GROUPS } from '../lib/families';
+
+const order = { 'in-store': 0, 'sold-before': 1, 'order-in': 2 } as const;
+const list = perfumes
+  .filter((p) => p.type !== 'Home')
+  .sort((a, b) => order[a.availability] - order[b.availability] || (/Designer|Niche/.test(a.type) ? 1 : 0) - (/Designer|Niche/.test(b.type) ? 1 : 0) || a.price - b.price);
+
+const filters = [
+  { key: 'g', label: 'For', options: [['', 'Anyone'], ['Women', 'Her'], ['Men', 'Him']] },
+  { key: 'f', label: 'Mood', options: [['', 'All moods'], ...GROUPS.map((g) => [g.id, g.label])] },
+  { key: 'band', label: 'Price', options: [['', 'Any price'], ['u20', 'Under ₦20k'], ['20to35', '₦20k to ₦35k'], ['35to60', '₦35k to ₦60k'], ['o60', 'Over ₦60k']] },
+  { key: 'kind', label: 'Type', options: [['', 'All types'], ['bottle', 'Full bottles'], ['small', 'Minis, oils and mists'], ['designer', 'Designer originals']] },
+  { key: 'a', label: 'Availability', options: [['', 'Everything'], ['in-store', 'In the store'], ['sold-before', 'Sold before'], ['order-in', 'Order-in']] },
+];
+---
+<Base title="The collection" description="Browse Lattafa, Arabian, designer and oil perfumes at Scents by Biba in Jos. Filter by mood, price and who it’s for, then order on WhatsApp.">
+  <section class="wrap shop-head">
+    <div class="ornament"><i></i></div>
+    <h1>The collection</h1>
+    <p class="muted">Everything Biba has sold, plus perfumes she can order in for you. “About” prices are confirmed on WhatsApp before you pay.</p>
+  </section>
+
+  <section class="wrap">
+    <form class="filters" aria-label="Filter perfumes">
+      {filters.map((f) => (
+        <label>
+          <span>{f.label}</span>
+          <select name={f.key}>
+            {f.options.map(([v, l]) => <option value={v}>{l}</option>)}
+          </select>
+        </label>
+      ))}
+      <label>
+        <span>Sort</span>
+        <select name="sort">
+          <option value="">Recommended</option>
+          <option value="low">Price, low to high</option>
+          <option value="high">Price, high to low</option>
+        </select>
+      </label>
+    </form>
+    <p class="count" aria-live="polite"><span id="count">{list.length}</span> perfumes</p>
+    <div class="grid" id="shop-grid">
+      {list.map((p) => <ProductTile p={p} />)}
+    </div>
+    <p class="empty" hidden>No perfumes match those filters. <a class="link" href="/shop/">Clear filters</a> or ask Biba on WhatsApp.</p>
+  </section>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('.filters')!;
+  const grid = document.getElementById('shop-grid')!;
+  const tiles = [...grid.querySelectorAll<HTMLElement>('.tile')];
+  const original = [...tiles];
+  const count = document.getElementById('count')!;
+  const empty = document.querySelector<HTMLElement>('.empty')!;
+  const params = new URLSearchParams(location.search);
+
+  for (const el of form.elements) {
+    const s = el as HTMLSelectElement;
+    if (s.name && params.has(s.name)) s.value = params.get(s.name)!;
+  }
+
+  function apply() {
+    const data = new FormData(form);
+    let shown = 0;
+    for (const t of tiles) {
+      const g = data.get('g') as string;
+      const ok =
+        (!g || t.dataset.g === g || t.dataset.g === 'Unisex') &&
+        (!data.get('f') || t.dataset.f === data.get('f')) &&
+        (!data.get('band') || t.dataset.band === data.get('band')) &&
+        (!data.get('kind') || t.dataset.kind === data.get('kind')) &&
+        (!data.get('a') || t.dataset.a === data.get('a'));
+      t.hidden = !ok;
+      if (ok) shown++;
+    }
+    const sort = data.get('sort');
+    const sorted = sort
+      ? [...tiles].sort((a, b) => (Number(a.dataset.price) - Number(b.dataset.price)) * (sort === 'low' ? 1 : -1))
+      : original;
+    grid.append(...sorted);
+    count.textContent = String(shown);
+    empty.hidden = shown > 0;
+    const url = new URL(location.href);
+    url.search = '';
+    for (const [k, v] of data) if (v) url.searchParams.set(k, String(v));
+    { try { history.replaceState(null, '', url); } catch { /* sandboxed preview */ } }
+  }
+  form.addEventListener('change', apply);
+  apply();
+</script>
+
+<style>
+  .shop-head { padding-block: clamp(2.5rem, 6vw, 4rem) 2rem; display: grid; gap: 0.9rem; justify-items: center; text-align: center; }
+  .shop-head h1 { font-size: var(--step-4); }
+  .filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr)); gap: 0.75rem; margin-bottom: 1rem; padding-block: 1.25rem; border-block: 1px solid var(--line); }
+  .filters label { display: grid; gap: 0.3rem; min-width: 0; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+  .filters select {
+    width: 100%; min-height: 44px; padding: 0.5rem 0.75rem; border-radius: 0; border: 1px solid var(--line);
+    background: var(--porcelain); font: 400 0.95rem var(--sans); color: var(--ink); text-transform: none; letter-spacing: 0;
+  }
+  .count { font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--ink-soft); margin: 1rem 0 1.5rem; }
+  .empty { padding: 2rem 0; text-align: center; margin-inline: auto; }
+  .tile[hidden] { display: none; }
+</style>
