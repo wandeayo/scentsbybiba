@@ -17,6 +17,8 @@ export interface Item {
   a: string;   // availability
   lo: number;  // longevity 1-3
   ph?: string; // cut-out photo URL, when there is one
+  r: string;   // shop reference, used in bag orders
+  z?: string;  // size
 }
 
 export interface Parsed {

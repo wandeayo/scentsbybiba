@@ -33,6 +33,8 @@ Key columns: `price_ngn`, `kind` (`In store ...`, `Sold before ...` or `Order-in
 
 Every "Order on WhatsApp" button opens a chat with 2347063221856 and a message that names the perfume and price. Searches add what the customer typed to that message.
 
+Buyers who want more than one perfume use the bag: "Add to bag" on tiles, search results and product pages, then "Send order to Biba on WhatsApp" sends one numbered message with each perfume, quantity, price, its ref (`SBB-…`) and the delivery city. Nothing is charged on the site. The bag lives in the buyer's browser (`localStorage`, key `biba-bag-v1`) and is never sent anywhere else. With Umami on, it also records `Bag add` and `Bag sent` events.
+
 ## Settings in Vercel
 
 Set these under Settings > Environment Variables, then redeploy. Each one is optional.
@@ -45,7 +47,11 @@ Set these under Settings > Environment Variables, then redeploy. Each one is opt
 
 ## Link previews
 
-Put a 1200×630 image at `public/og.jpg` and every page uses it when shared on WhatsApp, Instagram or X.
+Every product gets its own 1200×630 card (name, brand, price, photo or bottle drawing) at `/og/p/<slug>.jpg`, and every other page uses the shop card at `/og/home.jpg`. Both are drawn at build time by `src/lib/og.ts`, so new perfumes and photos get cards automatically. Put an image at `public/og.jpg` to replace the shop card with a real photo of the boutique.
+
+## Stock checklist
+
+`docs/biba-stock-checklist.csv` lists the 24 perfumes shown as in the boutique and every perfume with an unconfirmed name or brand. Biba fills in the blank columns (on the shelf today, correct name, correct brand, price today); then update `src/data/perfumes.csv` from it.
 
 ## Sitemap
 

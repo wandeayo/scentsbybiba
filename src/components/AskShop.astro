@@ -6,7 +6,8 @@ import HeroScene from './HeroScene.astro';
 const items: Item[] = perfumes.map((p) => ({
   s: p.slug, n: p.name, b: p.brand, g: p.gender, f: p.group, fl: p.family,
   o: p.occasions.join(','), k: p.notes, l: p.smellsLike, t: p.type, p: p.price,
-  a: p.availability, lo: p.longevity,
+  a: p.availability, lo: p.longevity, r: p.id,
+  ...(p.size ? { z: p.size } : {}),
   ...(p.photo && p.photoCutout ? { ph: p.photo } : {}),
 }));
 
@@ -106,7 +107,10 @@ const starters = [
           ${it.b ? `<p class="tile-brand">${esc(it.b)}</p>` : ''}
           <p class="tile-family">${esc(why.join(', '))}</p>
           <p class="price">${priceText(it)}</p>
-          <a class="tile-order" href="${wa(msg)}" target="_blank" rel="noopener" data-wa="search" data-perfume="${esc(it.n)}">Order on WhatsApp</a>
+          <div class="tile-actions">
+            <a class="tile-order" href="${wa(msg)}" target="_blank" rel="noopener" data-wa="search" data-perfume="${esc(it.n)}">Order on WhatsApp</a>
+            <button type="button" class="tile-add" data-bag-add="${esc(JSON.stringify({ s: it.s, n: it.n, b: it.b, z: it.z || '', r: it.r, p: it.p, a: it.a }))}" aria-label="Add ${esc(it.n)} to bag">Add to bag</button>
+          </div>
         </div>
       </article>`;
     }).join('');

@@ -133,6 +133,15 @@ h1, h2, h3, em, .italic, .tile-family, .pair-name { font-variant-numeric: lining
   border-bottom: 1px solid var(--gold); padding-bottom: 2px;
 }
 .tile-order:hover { color: var(--gold-deep); }
+.tile-actions { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; }
+.tile-add {
+  margin-top: 0.55rem; padding: 0 0 2px; background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer;
+  font: inherit; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.06em; color: var(--ink-soft);
+}
+.tile-add:hover { color: var(--ink); border-bottom-color: var(--ink); }
+/* Bigger tap areas without bigger text */
+.tile-order, .tile-add { position: relative; }
+.tile-order::after, .tile-add::after { content: ''; position: absolute; inset: -12px -6px; }
 @media (max-width: 34rem) {
   .tile-tag { font-size: 0.58rem; top: 5%; }
   .tile-body h3 { font-size: 1.2rem; }

@@ -1,6 +1,6 @@
 ---
 import type { Perfume } from '../lib/data';
-import { priceLabel, orderMessage } from '../lib/data';
+import { priceLabel, orderMessage, bagItem } from '../lib/data';
 import { bottleSvg } from '../lib/bottle';
 import { waLink } from '../lib/site';
 interface Props { p: Perfume; headingLevel?: 'h2' | 'h3'; city?: string }
@@ -23,6 +23,9 @@ const href = `/p/${p.slug}/`;
     {p.brand && <p class="tile-brand">{p.brand}</p>}
     <p class="tile-family">{p.family.split(' · ').slice(0, 2).join(' & ').toLowerCase()}</p>
     <p class="price">{priceLabel(p)}</p>
-    <a class="tile-order" href={waLink(orderMessage(p, undefined, city))} target="_blank" rel="noopener" data-wa="tile" data-perfume={p.name}>Order on WhatsApp</a>
+    <div class="tile-actions">
+      <a class="tile-order" href={waLink(orderMessage(p, undefined, city))} target="_blank" rel="noopener" data-wa="tile" data-perfume={p.name}>Order on WhatsApp</a>
+      <button type="button" class="tile-add" data-bag-add={bagItem(p)} aria-label={`Add ${p.name} to bag`}>Add to bag</button>
+    </div>
   </div>
 </article>
