@@ -3,13 +3,17 @@ import '../styles/global.css';
 import { SITE, waLink } from '../lib/site';
 import WaIcon from '../components/WaIcon.astro';
 import BottleDefs from '../components/BottleDefs.astro';
+import Bag from '../components/Bag.astro';
 import { CITIES } from '../lib/cities';
 import { existsSync } from 'node:fs';
-interface Props { title: string; description: string; jsonLd?: object; image?: string }
+interface Props { title: string; description: string; jsonLd?: object; image?: string; imageAlt?: string }
 const { title, description, jsonLd } = Astro.props;
-// Link previews (WhatsApp, Instagram, X). Drop a 1200x630 image at public/og.jpg and every page uses it.
+// Link previews (WhatsApp, Instagram, X). Product pages pass their own card; every
+// other page uses the shop card drawn by src/pages/og/home.jpg.ts. A 1200x630 image
+// dropped at public/og.jpg (a real shop photo, say) overrides that card.
 const defaultImage = ['og.jpg', 'og.png'].find((f) => existsSync(`public/${f}`));
-const image = Astro.props.image ?? (defaultImage ? `/${defaultImage}` : undefined);
+const image = Astro.props.image ?? (defaultImage ? `/${defaultImage}` : '/og/home.jpg');
+const imageAlt = Astro.props.imageAlt ?? 'Scents by Biba, fine perfumes in Jos';
 // Set these in Vercel > Settings > Environment Variables. Nothing is added until they exist.
 const umamiId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
 const googleVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
@@ -41,6 +45,8 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:locale" content="en_NG" />
     {imageUrl && <meta property="og:image" content={imageUrl} />}
+    {imageUrl && image?.startsWith('/og/') && <><meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" /></>}
+    {imageUrl && <meta property="og:image:alt" content={imageAlt} />}
     <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
     {googleVerification && <meta name="google-site-verification" content={googleVerification} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -79,7 +85,13 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
             ))}
           </ul>
         </nav>
-        <a class="header-wa" href={waLink(helpMsg)} target="_blank" rel="noopener" data-wa="header"><WaIcon /><span>Chat with Biba</span></a>
+        <div class="header-actions">
+          <a class="header-wa" href={waLink(helpMsg)} target="_blank" rel="noopener" data-wa="header"><WaIcon /><span>Chat with Biba</span></a>
+          <button type="button" class="bag-btn" data-bag-open data-bag-open-btn aria-label="Your order bag, empty">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2L5 8Z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg>
+            <span class="bag-count" data-bag-count hidden>0</span>
+          </button>
+        </div>
       </div>
     </header>
     <main id="main">
@@ -112,6 +124,7 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
         <p class="fineprint">“Smells like” comparisons describe a scent’s style only. Scents by Biba is not linked to those brands, and inspired perfumes are not the original products. Prices marked “About” are for perfumes we order in for you; Biba confirms the final price on WhatsApp before you pay.</p>
       </div>
     </footer>
+    <Bag />
     <a class="float-wa" href={waLink(helpMsg)} target="_blank" rel="noopener" data-wa="floating" aria-label="Chat with Biba on WhatsApp"><WaIcon /></a>
   </body>
 </html>
@@ -131,11 +144,18 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
   nav ul { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.1rem clamp(1rem, 3vw, 2.5rem); margin: 0; padding: 0; white-space: nowrap; }
   nav a { font-size: 0.85rem; letter-spacing: 0.05em; text-decoration: none; color: var(--ink-soft); padding-block: 0.35rem; display: inline-block; border-bottom: 1px solid transparent; }
   nav a:hover, nav a[aria-current='page'] { color: var(--ink); border-bottom-color: var(--gold); }
-  .header-wa { grid-column: 3; grid-row: 1; justify-self: end; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; letter-spacing: 0.04em; text-decoration: none; color: var(--ink); }
+  .header-actions { grid-column: 3; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 1rem; }
+  .bag-btn { position: relative; width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; cursor: pointer; color: var(--ink); }
+  .bag-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; }
+  .bag-count { position: absolute; top: 4px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--gold-deep); color: var(--ivory); font-size: 0.7rem; font-weight: 600; display: grid; place-items: center; font-variant-numeric: lining-nums; }
+  .bag-count[hidden] { display: none; }
+  .header-wa { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; letter-spacing: 0.04em; text-decoration: none; color: var(--ink); }
   .header-wa :global(svg) { width: 18px; height: 18px; fill: var(--gold-deep); }
   .header-wa:hover span { text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 4px; }
   @media (max-width: 40rem) {
     .header-wa span { display: none; }
+    .header-wa { width: 44px; height: 44px; justify-content: center; }
+    .header-actions { gap: 0.25rem; }
     .wm-main { font-size: 1.6rem; }
   }
   .float-wa { position: fixed; right: 1rem; bottom: 1rem; z-index: 5; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--noir); color: var(--gold-light); box-shadow: 0 8px 24px rgba(21,17,14,.35); }

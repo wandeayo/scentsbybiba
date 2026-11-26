@@ -128,11 +128,26 @@ h1, h2, h3, em, .italic, .tile-family, .pair-name { font-variant-numeric: lining
 .tile-brand { font-size: 0.78rem; letter-spacing: 0.06em; color: var(--ink-soft); }
 .tile-family { font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--ink-soft); }
 .price { font-family: var(--sans); font-weight: 500; font-size: 1rem; letter-spacing: 0.02em; }
-.tile-order {
-  margin-top: 0.55rem; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.06em; text-decoration: none;
-  border-bottom: 1px solid var(--gold); padding-bottom: 2px;
+/* Quick add: one round button on the art. A sibling of the art link, never inside it. */
+.tile-media { position: relative; }
+.tile-quick {
+  position: absolute; right: 8%; bottom: 7%; z-index: 2;
+  width: 44px; height: 44px; padding: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: var(--porcelain); color: var(--ink); border: 1px solid var(--line);
+  box-shadow: 0 4px 14px rgba(52, 34, 18, .14); -webkit-tap-highlight-color: transparent;
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease, transform .15s ease;
 }
-.tile-order:hover { color: var(--gold-deep); }
+.tile-quick:hover { border-color: var(--ink); }
+.tile-quick:active { transform: scale(.94); }
+.tile-quick:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.tile-quick svg {
+  grid-area: 1 / 1; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.4;
+  stroke-linecap: round; stroke-linejoin: round; transition: opacity .25s ease, transform .25s ease;
+}
+.tile-quick .q-in { opacity: 0; transform: scale(.6); stroke-width: 1.8; }
+.tile-quick[aria-pressed="true"] { background: var(--noir); color: var(--ivory); border-color: var(--noir); }
+.tile-quick[aria-pressed="true"] .q-add { opacity: 0; transform: scale(.6); }
+.tile-quick[aria-pressed="true"] .q-in { opacity: 1; transform: none; }
 @media (max-width: 34rem) {
   .tile-tag { font-size: 0.58rem; top: 5%; }
   .tile-body h3 { font-size: 1.2rem; }
@@ -156,4 +171,4 @@ h1, h2, h3, em, .italic, .tile-family, .pair-name { font-variant-numeric: lining
   .reveal { animation: rise 600ms cubic-bezier(.2,.7,.2,1) both; }
   @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
 }
-@media (prefers-reduced-motion: reduce) { .tile-art .bottle, .tile-art img.cutout { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .tile-art .bottle, .tile-art img.cutout, .tile-quick, .tile-quick svg { transition: none; } }

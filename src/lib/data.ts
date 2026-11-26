@@ -166,6 +166,13 @@ export function priceLabel(p: Perfume): string {
   return p.availability === 'order-in' ? `About ${n}` : n;
 }
 
+// What the order bag keeps about a perfume. Short keys keep the saved bag small.
+export interface BagItem { s: string; n: string; b: string; z: string; r: string; p: number; a: Availability }
+export function bagItem(p: Perfume): string {
+  const item: BagItem = { s: p.slug, n: p.name, b: p.brandKnown ? p.brand : '', z: p.size, r: p.id, p: p.price, a: p.availability };
+  return JSON.stringify(item);
+}
+
 export function orderMessage(p: Perfume, query?: string, city?: string): string {
   const price = priceLabel(p);
   const what = `${p.name}${p.brand ? ` by ${p.brand}` : ''} (${price})`;

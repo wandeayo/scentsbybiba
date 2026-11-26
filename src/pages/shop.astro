@@ -7,7 +7,8 @@ import { GROUPS } from '../lib/families';
 const order = { 'in-store': 0, 'sold-before': 1, 'order-in': 2 } as const;
 const list = perfumes
   .filter((p) => p.type !== 'Home')
-  .sort((a, b) => order[a.availability] - order[b.availability] || (/Designer|Niche/.test(a.type) ? 1 : 0) - (/Designer|Niche/.test(b.type) ? 1 : 0) || a.price - b.price);
+  // Shelf first, then photographed bottles, so the first screen is real stock with real photos
+  .sort((a, b) => order[a.availability] - order[b.availability] || Number(!!b.photo) - Number(!!a.photo) || (/Designer|Niche/.test(a.type) ? 1 : 0) - (/Designer|Niche/.test(b.type) ? 1 : 0) || a.price - b.price);
 
 const filters = [
   { key: 'g', label: 'For', options: [['', 'Anyone'], ['Women', 'Her'], ['Men', 'Him']] },

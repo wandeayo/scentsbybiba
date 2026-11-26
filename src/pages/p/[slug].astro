@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import ProductTile from '../../components/ProductTile.astro';
 import Meter from '../../components/Meter.astro';
 import WaIcon from '../../components/WaIcon.astro';
-import { perfumes, similar, priceLabel, orderMessage, availabilityLabel, slugify, type Perfume } from '../../lib/data';
+import { perfumes, similar, priceLabel, orderMessage, availabilityLabel, slugify, bagItem, type Perfume } from '../../lib/data';
 import { SITE, waLink, abs, graph, breadcrumbs, STORE_ID } from '../../lib/site';
 import { bottleSvg } from '../../lib/bottle';
 
@@ -22,6 +22,8 @@ const availNote = {
   'order-in': 'Biba orders this in for you. The price shown is an estimate; she confirms the final price and delivery date on WhatsApp before you pay.',
 }[p.availability];
 const url = `/p/${p.slug}/`;
+// Link preview card, drawn at build time by src/pages/og/p/[slug].jpg.ts
+const ogImage = `/og/p/${p.slug}.jpg`;
 const crumbs = breadcrumbs([['Home', '/'], ['The collection', '/shop/'], [p.name, url]]);
 // Order-in prices are estimates, so those pages don't claim a price to Google.
 const product = p.availability === 'order-in' ? undefined : {
@@ -29,7 +31,9 @@ const product = p.availability === 'order-in' ? undefined : {
   name: p.name,
   ...(p.brand ? { brand: { '@type': 'Brand', name: p.brand } } : {}),
   description: p.description,
-  ...(p.photo ? { image: abs(p.photo) } : {}),
+  // Google wants an image on every product; the preview card stands in when there's no photo yet
+  image: abs(p.photo || ogImage),
+  sku: p.id,
   category: p.family.split(' · ')[0] + ' perfume',
   offers: {
     '@type': 'Offer',
@@ -44,7 +48,7 @@ const product = p.availability === 'order-in' ? undefined : {
 };
 const jsonLd = product ? graph(product, crumbs) : graph(crumbs);
 ---
-<Base title={title} description={desc} jsonLd={jsonLd}>
+<Base title={title} description={desc} jsonLd={jsonLd} image={ogImage} imageAlt={`${p.name}${p.brand ? ` by ${p.brand}` : ''}, ${priceLabel(p)}`}>
   <article class="wrap product">
     <div class={`product-art glow-${p.group}`}>
       {p.photo
@@ -59,7 +63,11 @@ const jsonLd = product ? graph(product, crumbs) : graph(crumbs);
       <div class="buy">
         <p class="price big">{priceLabel(p)}</p>
         <p class="avail">{availabilityLabel[p.availability]}. {availNote}</p>
-        <a class="btn btn-noir" href={waLink(orderMessage(p))} target="_blank" rel="noopener" data-wa="product" data-perfume={p.name}><WaIcon />Order on WhatsApp</a>
+        <div class="buy-actions">
+          <a class="btn btn-noir" href={waLink(orderMessage(p))} target="_blank" rel="noopener" data-wa="product" data-perfume={p.name}><WaIcon />Order on WhatsApp</a>
+          <button type="button" class="btn btn-line" data-bag-add={bagItem(p)} data-bag-slug={p.slug} data-label-in="View in bag" data-label-out="Add to bag">Add to bag</button>
+        </div>
+        <p class="buy-hint">Buying more than one? Add them to your bag and send Biba one message.</p>
         <p class="small muted">{SITE.delivery}, or collect from {SITE.addressShort}.</p>
       </div>
       <dl class="facts">
@@ -102,6 +110,8 @@ const jsonLd = product ? graph(product, crumbs) : graph(crumbs);
   .price.big { font-size: 1.6rem; }
   .avail { font-size: 0.92rem; color: var(--ink-soft); }
   .buy .btn { justify-self: start; }
+  .buy-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .buy-hint { font-size: 0.85rem; color: var(--ink-soft); }
   .facts { margin: 0; display: grid; }
   .facts div { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
   .facts dt { font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); padding-top: 0.15rem; }
