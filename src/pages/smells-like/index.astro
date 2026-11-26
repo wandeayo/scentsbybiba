@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { smellsLikeIndex, priceLabel } from '../../lib/data';
-const all = smellsLikeIndex().filter((l) => l.items.some((p) => !/Designer|Niche/.test(p.type)));
+import { smellsLikePages, priceLabel } from '../../lib/data';
+const all = smellsLikePages();
 ---
 <Base title="Perfumes that smell like designer scents" description="Affordable perfumes in Jos inspired by Creed Aventus, Baccarat Rouge 540, Dior Sauvage, Armani My Way and more. Prices from Scents by Biba.">
   <section class="wrap head">

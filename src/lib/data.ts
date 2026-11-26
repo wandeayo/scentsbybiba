@@ -149,6 +149,12 @@ export function smellsLikeIndex(): { name: string; slug: string; items: Perfume[
     .sort((a, b) => b.items.length - a.items.length || a.name.localeCompare(b.name));
 }
 
+// Comparisons that get their own /smells-like/<slug>/ page: at least one inspired
+// alternative, not only the designer original.
+export function smellsLikePages() {
+  return smellsLikeIndex().filter((l) => l.items.some((p) => !/Designer|Niche/.test(p.type)));
+}
+
 export const availabilityLabel: Record<Availability, string> = {
   'in-store': 'In the boutique',
   'sold-before': 'Ask if it’s in stock',
@@ -160,9 +166,10 @@ export function priceLabel(p: Perfume): string {
   return p.availability === 'order-in' ? `About ${n}` : n;
 }
 
-export function orderMessage(p: Perfume, query?: string): string {
+export function orderMessage(p: Perfume, query?: string, city?: string): string {
   const price = priceLabel(p);
   const what = `${p.name}${p.brand ? ` by ${p.brand}` : ''} (${price})`;
   if (query) return `Hi Biba, I was looking for "${query}" on your website and saw ${what}. Is it available?`;
+  if (city) return `Hi Biba, I’m in ${city} and I’d like ${what}. How much is delivery?`;
   return `Hi Biba, I’d like ${what}. I saw it on your website.`;
 }

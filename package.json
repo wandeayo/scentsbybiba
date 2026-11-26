@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/check-sitemap.mjs",
     "preview": "astro preview",
     "sync-sheet": "node scripts/sync-sheet.mjs"
   },

@@ -6,7 +6,8 @@ import MoodIcon from '../components/MoodIcon.astro';
 import { perfumes, smellsLikeIndex, priceLabel } from '../lib/data';
 import { bottleSvg } from '../lib/bottle';
 import { GROUPS } from '../lib/families';
-import { SITE, naira } from '../lib/site';
+import { SITE, naira, graph, storeJsonLd } from '../lib/site';
+import { CITIES } from '../lib/cities';
 
 const inStore = perfumes
   .filter((p) => p.availability === 'in-store' && p.type !== 'Home' && !/name to confirm|assorted/i.test(p.name))
@@ -30,16 +31,7 @@ const likes = smellsLikeIndex()
 
 const counts = Object.fromEntries(GROUPS.map((g) => [g.id, perfumes.filter((p) => p.group === g.id && p.type !== 'Home').length]));
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Store',
-  name: SITE.name,
-  url: SITE.url,
-  telephone: '+' + SITE.whatsapp,
-  address: { '@type': 'PostalAddress', streetAddress: 'Shop 6, Thilda Centre, Dadin Kowa, Zarmangada roundabout', addressLocality: 'Jos', addressRegion: 'Plateau', addressCountry: 'NG' },
-  openingHours: 'Mo-Sa 10:00-17:00',
-  sameAs: [SITE.instagram],
-};
+const jsonLd = graph(storeJsonLd(CITIES.map((c) => c.name)));
 ---
 <Base title="Scents by Biba" description="Fine perfumes in Jos: Lattafa, Arabian, designer and oil perfumes. Tell us what you’d love to smell like and order on WhatsApp. Delivery across Nigeria in 1 to 2 days." jsonLd={jsonLd}>
   <AskShop />

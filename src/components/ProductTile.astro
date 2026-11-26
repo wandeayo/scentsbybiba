@@ -3,8 +3,8 @@ import type { Perfume } from '../lib/data';
 import { priceLabel, orderMessage } from '../lib/data';
 import { bottleSvg } from '../lib/bottle';
 import { waLink } from '../lib/site';
-interface Props { p: Perfume; headingLevel?: 'h2' | 'h3' }
-const { p, headingLevel = 'h3' } = Astro.props;
+interface Props { p: Perfume; headingLevel?: 'h2' | 'h3'; city?: string }
+const { p, headingLevel = 'h3', city } = Astro.props;
 const H = headingLevel;
 const band = p.price < 20000 ? 'u20' : p.price <= 35000 ? '20to35' : p.price <= 60000 ? '35to60' : 'o60';
 const kind = /Mini|mist|spray|Oil/i.test(p.type) ? 'small' : /Designer|Niche|High street/.test(p.type) ? 'designer' : 'bottle';
@@ -23,6 +23,6 @@ const href = `/p/${p.slug}/`;
     {p.brand && <p class="tile-brand">{p.brand}</p>}
     <p class="tile-family">{p.family.split(' · ').slice(0, 2).join(' & ').toLowerCase()}</p>
     <p class="price">{priceLabel(p)}</p>
-    <a class="tile-order" href={waLink(orderMessage(p))} target="_blank" rel="noopener">Order on WhatsApp</a>
+    <a class="tile-order" href={waLink(orderMessage(p, undefined, city))} target="_blank" rel="noopener" data-wa="tile" data-perfume={p.name}>Order on WhatsApp</a>
   </div>
 </article>

@@ -4,7 +4,7 @@ import ProductTile from '../../components/ProductTile.astro';
 import Meter from '../../components/Meter.astro';
 import WaIcon from '../../components/WaIcon.astro';
 import { perfumes, similar, priceLabel, orderMessage, availabilityLabel, slugify, type Perfume } from '../../lib/data';
-import { SITE, waLink } from '../../lib/site';
+import { SITE, waLink, abs, graph, breadcrumbs, STORE_ID } from '../../lib/site';
 import { bottleSvg } from '../../lib/bottle';
 
 export function getStaticPaths() {
@@ -21,14 +21,28 @@ const availNote = {
   'sold-before': 'Biba has sold this before. Message her to check if it’s back in stock.',
   'order-in': 'Biba orders this in for you. The price shown is an estimate; she confirms the final price and delivery date on WhatsApp before you pay.',
 }[p.availability];
-const jsonLd = p.availability === 'order-in' ? undefined : {
-  '@context': 'https://schema.org',
+const url = `/p/${p.slug}/`;
+const crumbs = breadcrumbs([['Home', '/'], ['The collection', '/shop/'], [p.name, url]]);
+// Order-in prices are estimates, so those pages don't claim a price to Google.
+const product = p.availability === 'order-in' ? undefined : {
   '@type': 'Product',
   name: p.name,
   ...(p.brand ? { brand: { '@type': 'Brand', name: p.brand } } : {}),
   description: p.description,
-  offers: { '@type': 'Offer', priceCurrency: 'NGN', price: p.price, url: new URL(`/p/${p.slug}/`, SITE.url).href },
+  ...(p.photo ? { image: abs(p.photo) } : {}),
+  category: p.family.split(' · ')[0] + ' perfume',
+  offers: {
+    '@type': 'Offer',
+    priceCurrency: 'NGN',
+    price: p.price,
+    url: abs(url),
+    itemCondition: 'https://schema.org/NewCondition',
+    // "Sold before" means Biba has to check, so only boutique stock is claimed as in stock.
+    ...(p.availability === 'in-store' ? { availability: 'https://schema.org/InStock' } : {}),
+    seller: { '@id': STORE_ID },
+  },
 };
+const jsonLd = product ? graph(product, crumbs) : graph(crumbs);
 ---
 <Base title={title} description={desc} jsonLd={jsonLd}>
   <article class="wrap product">
@@ -45,7 +59,7 @@ const jsonLd = p.availability === 'order-in' ? undefined : {
       <div class="buy">
         <p class="price big">{priceLabel(p)}</p>
         <p class="avail">{availabilityLabel[p.availability]}. {availNote}</p>
-        <a class="btn btn-noir" href={waLink(orderMessage(p))} target="_blank" rel="noopener"><WaIcon />Order on WhatsApp</a>
+        <a class="btn btn-noir" href={waLink(orderMessage(p))} target="_blank" rel="noopener" data-wa="product" data-perfume={p.name}><WaIcon />Order on WhatsApp</a>
         <p class="small muted">{SITE.delivery}, or collect from {SITE.addressShort}.</p>
       </div>
       <dl class="facts">
