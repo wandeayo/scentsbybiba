@@ -65,7 +65,7 @@ const jsonLd = product ? graph(product, crumbs) : graph(crumbs);
         <p class="avail">{availabilityLabel[p.availability]}. {availNote}</p>
         <div class="buy-actions">
           <a class="btn btn-noir" href={waLink(orderMessage(p))} target="_blank" rel="noopener" data-wa="product" data-perfume={p.name}><WaIcon />Order on WhatsApp</a>
-          <button type="button" class="btn btn-line" data-bag-add={bagItem(p)}>Add to bag</button>
+          <button type="button" class="btn btn-line" data-bag-add={bagItem(p)} data-bag-slug={p.slug} data-label-in="View in bag" data-label-out="Add to bag">Add to bag</button>
         </div>
         <p class="buy-hint">Buying more than one? Add them to your bag and send Biba one message.</p>
         <p class="small muted">{SITE.delivery}, or collect from {SITE.addressShort}.</p>

@@ -47,7 +47,8 @@ const cities = ['Jos (pick up at the shop)', 'Jos (deliver to me)', 'Abuja', 'Ka
 
 <script>
   type Availability = 'in-store' | 'sold-before' | 'order-in';
-  interface Item { s: string; n: string; b: string; z: string; r: string; p: number; a: Availability; q: number }
+  // sq: what the buyer typed in the search when they added it, if they came from a search
+  interface Item { s: string; n: string; b: string; z: string; r: string; p: number; a: Availability; q: number; sq?: string }
   interface Saved { items: Item[]; city: string }
 
   const KEY = 'biba-bag-v1';
@@ -91,7 +92,9 @@ const cities = ['Jos (pick up at the shop)', 'Jos (deliver to me)', 'Abuja', 'Ka
     });
     const total = saved.items.reduce((sum, i) => sum + i.p * i.q, 0);
     const estimate = saved.items.some((i) => i.a !== 'in-store') ? 'About ' : '';
+    const searches = [...new Set(saved.items.map((i) => i.sq?.trim()).filter(Boolean))];
     return [
+      searches.length ? `(I searched for ${searches.map((q) => `"${q}"`).join(' and ')})` : '',
       'Hi Biba, I’d like to order these from your website:',
       '',
       ...lines,
@@ -99,12 +102,31 @@ const cities = ['Jos (pick up at the shop)', 'Jos (deliver to me)', 'Abuja', 'Ka
       `Estimated total: ${estimate}${naira(total)}`,
       saved.city ? `Deliver to: ${saved.city}` : '',
       'Please confirm stock, the final total and delivery. Thank you!',
-    ].filter((l, k, all) => l !== '' || all[k - 1] !== '').join('\n');
+    ].filter((l, k, all) => l !== '' || (k > 0 && all[k - 1] !== '')).join('\n');
+  }
+
+  const inBag = (slug: string) => memory.items.some((i) => i.s === slug);
+
+  // Every add button names its perfume with data-bag-slug. Tile buttons turn into a
+  // tick that opens the bag; the product page button swaps its words.
+  function syncButtons() {
+    document.querySelectorAll<HTMLElement>('[data-bag-slug]').forEach((el) => {
+      const isIn = inBag(el.dataset.bagSlug!);
+      if (el.hasAttribute('aria-pressed')) {
+        let name = '';
+        try { name = JSON.parse(el.dataset.bagAdd || '{}').n || ''; } catch {}
+        el.setAttribute('aria-pressed', String(isIn));
+        el.setAttribute('aria-label', isIn ? `${name} is in your bag. View bag` : `Add ${name} to bag`);
+      }
+      const label = isIn ? el.dataset.labelIn : el.dataset.labelOut;
+      if (label && el.textContent !== label) el.textContent = label;
+    });
   }
 
   function render() {
     const saved = memory;
     const count = saved.items.reduce((n, i) => n + i.q, 0);
+    syncButtons();
     document.querySelectorAll<HTMLElement>('[data-bag-count]').forEach((el) => {
       el.textContent = String(count);
       el.hidden = count === 0;
@@ -145,13 +167,17 @@ const cities = ['Jos (pick up at the shop)', 'Jos (deliver to me)', 'Abuja', 'Ka
     send.href = `https://wa.me/${wa}?text=${encodeURIComponent(message(saved))}`;
   }
 
-  function add(raw: string) {
+  function add(raw: string, fromCity?: string) {
     let item: Item;
     try { item = { ...JSON.parse(raw), q: 1 }; } catch { return; }
     const saved = load();
     const found = saved.items.find((i) => i.s === item.s);
-    if (found) found.q = Math.min(found.q + 1, 20);
-    else saved.items.push(item);
+    if (found) {
+      found.q = Math.min(found.q + 1, 20);
+      if (item.sq) found.sq = item.sq;
+    } else saved.items.push(item);
+    // Adding from a city page fills in "Deliver to", but never replaces what the buyer typed
+    if (fromCity && !saved.city) saved.city = fromCity;
     save({ ...saved });
     track('Bag add', { perfume: item.n, page: location.pathname });
     showToast(`${item.n} is in your bag.`);
@@ -173,7 +199,15 @@ const cities = ['Jos (pick up at the shop)', 'Jos (deliver to me)', 'Abuja', 'Ka
   document.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
     const adder = t.closest<HTMLElement>('[data-bag-add]');
-    if (adder) { e.preventDefault(); add(adder.dataset.bagAdd!); return; }
+    if (adder) {
+      e.preventDefault();
+      // Already in the bag: the button is a tick (or "View in bag"), so open the bag instead of adding another
+      const slug = adder.dataset.bagSlug;
+      load();
+      if (slug && inBag(slug)) open();
+      else add(adder.dataset.bagAdd!, adder.dataset.bagCity);
+      return;
+    }
     if (t.closest('[data-bag-open]')) { e.preventDefault(); open(); return; }
     if (t.closest('[data-bag-close]')) { dialog.close(); return; }
   });
@@ -209,6 +243,16 @@ const cities = ['Jos (pick up at the shop)', 'Jos (deliver to me)', 'Abuja', 'Ka
   $('[data-bag-clear]', dialog).addEventListener('click', () => {
     save({ items: [], city: load().city });
     ($('[data-bag-after]', dialog) as HTMLElement).hidden = true;
+  });
+
+  // Search results are drawn after the page loads, and ask to be marked here
+  document.addEventListener('bag:sync', syncButtons);
+
+  // Keep in step with a bag changed in another tab
+  window.addEventListener('storage', (e) => {
+    if (e.key !== KEY && e.key !== null) return;
+    try { memory = e.newValue ? JSON.parse(e.newValue) : { items: [], city: '' }; } catch { return; }
+    render();
   });
 
   load();

@@ -69,6 +69,7 @@ const starters = [
 <script>
   import { rank, parse, type Item } from '../lib/search';
   import { bottleSvg } from '../lib/bottle';
+  import { QUICK_ADD_ICONS } from '../lib/quick-add';
 
   const WA = '2347063221856';
   const items: Item[] = JSON.parse(document.getElementById('catalog')!.textContent || '[]');
@@ -98,22 +99,24 @@ const starters = [
     }
     summary.textContent = hits.length === 1 ? 'Biba’s pick for you' : `${hits.length} picks for “${query}”`;
     list.innerHTML = hits.map(({ item: it, why }) => {
-      const msg = `Hi Biba, I was looking for "${query}" on your website and saw ${it.n}${it.b ? ` by ${it.b}` : ''} (${priceText(it)}). Is it available?`;
       const tag = tagText[it.a];
+      // sq: the search that found it, so Biba's message says what the buyer asked for
+      const bag = { s: it.s, n: it.n, b: it.b, z: it.z || '', r: it.r, p: it.p, a: it.a, sq: query };
       return `<article class="tile reveal">
-        <a class="tile-art glow-${it.f}" href="/p/${it.s}/" tabindex="-1" aria-hidden="true">${tag ? `<span class="tile-tag">${tag}</span>` : ''}${it.ph ? `<img class="cutout" src="${it.ph}" alt="" loading="lazy">` : bottleSvg(it.s, it.t, it.f, it.g)}</a>
+        <div class="tile-media">
+          <a class="tile-art glow-${it.f}" href="/p/${it.s}/" tabindex="-1" aria-hidden="true">${tag ? `<span class="tile-tag">${tag}</span>` : ''}${it.ph ? `<img class="cutout" src="${it.ph}" alt="" loading="lazy">` : bottleSvg(it.s, it.t, it.f, it.g)}</a>
+          <button type="button" class="tile-quick" data-bag-add="${esc(JSON.stringify(bag))}" data-bag-slug="${esc(it.s)}" aria-label="Add ${esc(it.n)} to bag" aria-pressed="false">${QUICK_ADD_ICONS}</button>
+        </div>
         <div class="tile-body">
           <h3><a href="/p/${it.s}/">${esc(it.n)}</a></h3>
           ${it.b ? `<p class="tile-brand">${esc(it.b)}</p>` : ''}
           <p class="tile-family">${esc(why.join(', '))}</p>
           <p class="price">${priceText(it)}</p>
-          <div class="tile-actions">
-            <a class="tile-order" href="${wa(msg)}" target="_blank" rel="noopener" data-wa="search" data-perfume="${esc(it.n)}">Order on WhatsApp</a>
-            <button type="button" class="tile-add" data-bag-add="${esc(JSON.stringify({ s: it.s, n: it.n, b: it.b, z: it.z || '', r: it.r, p: it.p, a: it.a }))}" aria-label="Add ${esc(it.n)} to bag">Add to bag</button>
-          </div>
         </div>
       </article>`;
     }).join('');
+    // The bag script marks the cards already in the bag
+    document.dispatchEvent(new Event('bag:sync'));
   }
 
   function run(q: string, scroll = true) {

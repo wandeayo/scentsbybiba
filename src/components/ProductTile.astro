@@ -1,8 +1,8 @@
 ---
 import type { Perfume } from '../lib/data';
-import { priceLabel, orderMessage, bagItem } from '../lib/data';
+import { priceLabel, bagItem } from '../lib/data';
 import { bottleSvg } from '../lib/bottle';
-import { waLink } from '../lib/site';
+import { QUICK_ADD_ICONS } from '../lib/quick-add';
 interface Props { p: Perfume; headingLevel?: 'h2' | 'h3'; city?: string }
 const { p, headingLevel = 'h3', city } = Astro.props;
 const H = headingLevel;
@@ -12,20 +12,19 @@ const tag = p.availability === 'in-store' ? 'In the boutique' : p.availability =
 const href = `/p/${p.slug}/`;
 ---
 <article class="tile" data-g={p.gender} data-f={p.group} data-band={band} data-a={p.availability} data-kind={kind} data-price={p.price}>
-  <a class={`tile-art glow-${p.group}`} href={href} tabindex="-1" aria-hidden="true">
-    {tag && <span class="tile-tag">{tag}</span>}
-    {p.photo
-      ? <img class={p.photoCutout ? 'cutout' : 'scene'} src={p.photo} alt="" loading="lazy" decoding="async" />
-      : <Fragment set:html={bottleSvg(p.slug, p.type, p.group, p.gender)} />}
-  </a>
+  <div class="tile-media">
+    <a class={`tile-art glow-${p.group}`} href={href} tabindex="-1" aria-hidden="true">
+      {tag && <span class="tile-tag">{tag}</span>}
+      {p.photo
+        ? <img class={p.photoCutout ? 'cutout' : 'scene'} src={p.photo} alt="" loading="lazy" decoding="async" />
+        : <Fragment set:html={bottleSvg(p.slug, p.type, p.group, p.gender)} />}
+    </a>
+    <button type="button" class="tile-quick" data-bag-add={bagItem(p)} data-bag-slug={p.slug} data-bag-city={city} aria-label={`Add ${p.name} to bag`} aria-pressed="false" set:html={QUICK_ADD_ICONS} />
+  </div>
   <div class="tile-body">
     <H><a href={href}>{p.name}</a></H>
     {p.brand && <p class="tile-brand">{p.brand}</p>}
     <p class="tile-family">{p.family.split(' · ').slice(0, 2).join(' & ').toLowerCase()}</p>
     <p class="price">{priceLabel(p)}</p>
-    <div class="tile-actions">
-      <a class="tile-order" href={waLink(orderMessage(p, undefined, city))} target="_blank" rel="noopener" data-wa="tile" data-perfume={p.name}>Order on WhatsApp</a>
-      <button type="button" class="tile-add" data-bag-add={bagItem(p)} aria-label={`Add ${p.name} to bag`}>Add to bag</button>
-    </div>
   </div>
 </article>
