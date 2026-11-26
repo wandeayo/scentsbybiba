@@ -1,0 +1,104 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProductTile from '../../components/ProductTile.astro';
+import WaIcon from '../../components/WaIcon.astro';
+import { CITIES, picksFor, type City } from '../../lib/cities';
+import { SITE, waLink, graph, storeJsonLd, breadcrumbs } from '../../lib/site';
+
+export function getStaticPaths() {
+  return CITIES.map((city) => ({ params: { city: city.slug }, props: { city } }));
+}
+const { city } = Astro.props as { city: City };
+const picks = picksFor(city);
+const others = CITIES.filter((c) => c.slug !== city.slug);
+const hello = `Hi Biba, I’m in ${city.name} and I’d like to order a perfume. Can you help me choose?`;
+const faq: [string, string][] = [
+  [`How long does delivery to ${city.name} take?`, `1 to 2 days after you pay. Biba tells you the delivery date when she confirms your order.`],
+  [`How much is delivery to ${city.name}?`, `It depends on where in ${city.name} you are. Biba tells you the exact fee on WhatsApp before you pay, so there are no surprises.`],
+  ['Can you get a perfume that isn’t on the site?', 'Yes. Send Biba the name, or the perfume it should smell like, and she’ll tell you if she can order it in and what it costs.'],
+  ['How do I know what I’m buying?', 'Every perfume page says what it is: a perfume from an Arabian house like Lattafa or Khadlaj, an inspired alternative to a designer scent, or a designer original. Inspired perfumes share the style of the original but are not the original.'],
+  ['Can I visit the shop instead?', `Yes. The boutique is at ${SITE.address}, open ${SITE.hours}.`],
+];
+const path = `/delivery/${city.slug}/`;
+---
+<Base
+  title={`Perfume delivery in ${city.name}`}
+  description={city.description}
+  jsonLd={graph(
+    storeJsonLd([city.name]),
+    breadcrumbs([['Home', '/'], ['Visit & delivery', '/visit/'], [`Delivery in ${city.name}`, path]]),
+  )}
+>
+  <section class="wrap head">
+    <p class="small"><a class="link" href="/visit/">Visit & delivery</a></p>
+    <div class="ornament"><i></i></div>
+    <h1>Perfumes delivered to {city.name}</h1>
+    <p class="intro">{city.intro}</p>
+    <div class="actions">
+      <a class="btn btn-noir" href={waLink(hello)} target="_blank" rel="noopener" data-wa="city"><WaIcon />Order from {city.name} on WhatsApp</a>
+      <a class="link" href="/shop/">Browse the collection</a>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <ul class="facts">
+      <li><strong>1 to 2 days</strong><span>from Jos to {city.name}, once you’ve paid</span></li>
+      <li><strong>No surprises</strong><span>Biba confirms the price and the delivery fee before you pay</span></li>
+      <li><strong>Can’t find it?</strong><span>Tell Biba what you want and she’ll order it in</span></li>
+    </ul>
+  </section>
+
+  <section class="section wrap" aria-labelledby="picks">
+    <div class="section-head">
+      <div class="ornament"><i></i></div>
+      <h2 id="picks">{city.picksHeading}</h2>
+      <p>{city.picksIntro}</p>
+    </div>
+    <div class="grid">{picks.map((p) => <ProductTile p={p} city={city.name} />)}</div>
+  </section>
+
+  <section class="wrap split">
+    <div class="block">
+      <h2>Making it last in {city.name}</h2>
+      <ul class="tips">{city.tips.map((t) => <li>{t}</li>)}</ul>
+    </div>
+    <div class="block">
+      <h2>How ordering works</h2>
+      <ol>
+        <li>Find a perfume and tap “Order on WhatsApp”. The message is written for you, and it tells Biba you’re in {city.name}.</li>
+        <li>Biba confirms stock, the final price and the delivery fee.</li>
+        <li>You pay, and it’s on its way to {city.name}.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section wrap faq" aria-labelledby="faq">
+    <div class="section-head">
+      <div class="ornament"><i></i></div>
+      <h2 id="faq">Questions from {city.name}</h2>
+    </div>
+    <dl>
+      {faq.map(([q, a]) => <div><dt>{q}</dt><dd>{a}</dd></div>)}
+    </dl>
+    <p class="others">We also deliver to {others.map((c, i) => <>{i > 0 && (i === others.length - 1 ? ' and ' : ', ')}<a class="link" href={`/delivery/${c.slug}/`}>{c.name}</a></>)}, and everywhere else in Nigeria.</p>
+  </section>
+</Base>
+<style>
+  .head { padding-block: clamp(2.5rem, 6vw, 4rem) 2rem; display: grid; gap: 1rem; justify-items: center; text-align: center; }
+  .head h1 { font-size: var(--step-4); }
+  .intro { font-family: var(--serif); font-size: 1.4rem; line-height: 1.45; max-width: 40rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 1.25rem 1.75rem; align-items: center; justify-content: center; margin-top: 0.5rem; }
+  .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+  .facts li { background: var(--porcelain); padding: 1.5rem 1.5rem; display: grid; gap: 0.3rem; text-align: center; }
+  .facts strong { font-family: var(--serif); font-weight: 500; font-size: 1.6rem; }
+  .facts span { color: var(--ink-soft); font-size: 0.92rem; }
+  .split { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+  .block { background: var(--porcelain); border: 1px solid var(--line); padding: 2rem 1.75rem; display: grid; gap: 0.9rem; align-content: start; }
+  .block h2 { font-size: 1.9rem; }
+  .tips, ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.6rem; }
+  .faq dl { margin: 0 auto; max-width: 46rem; display: grid; }
+  .faq dl div { padding: 1.1rem 0; border-bottom: 1px solid var(--line); display: grid; gap: 0.35rem; }
+  .faq dt { font-family: var(--serif); font-weight: 500; font-size: 1.35rem; }
+  .faq dd { margin: 0; color: var(--ink-soft); }
+  .others { margin: 2.5rem auto 0; text-align: center; font-family: var(--serif); font-style: italic; font-size: 1.25rem; }
+</style>

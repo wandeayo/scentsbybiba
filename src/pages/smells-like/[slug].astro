@@ -1,13 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ProductTile from '../../components/ProductTile.astro';
-import { smellsLikeIndex, priceLabel } from '../../lib/data';
+import { smellsLikePages, priceLabel } from '../../lib/data';
 import { waLink } from '../../lib/site';
 
 export function getStaticPaths() {
-  return smellsLikeIndex()
-    .filter((l) => l.items.some((p) => !/Designer|Niche/.test(p.type)))
-    .map((l) => ({ params: { slug: l.slug }, props: { l } }));
+  return smellsLikePages().map((l) => ({ params: { slug: l.slug }, props: { l } }));
 }
 const { l } = Astro.props;
 const alts = l.items.filter((p: any) => !/Designer|Niche/.test(p.type));
@@ -25,7 +23,7 @@ const cheapest = alts[0];
   </section>
   <section class="wrap">
     <div class="grid">{alts.map((p: any) => <ProductTile p={p} headingLevel="h2" />)}</div>
-    <p class="ask">Want the original instead? <a class="link" href={waLink(`Hi Biba, can you get me the original ${l.name}? What would it cost?`)} target="_blank" rel="noopener">Ask Biba for a price</a>.</p>
+    <p class="ask">Want the original instead? <a class="link" href={waLink(`Hi Biba, can you get me the original ${l.name}? What would it cost?`)} target="_blank" rel="noopener" data-wa="smells-like-original">Ask Biba for a price</a>.</p>
   </section>
 </Base>
 <style>

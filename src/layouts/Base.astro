@@ -3,8 +3,16 @@ import '../styles/global.css';
 import { SITE, waLink } from '../lib/site';
 import WaIcon from '../components/WaIcon.astro';
 import BottleDefs from '../components/BottleDefs.astro';
-interface Props { title: string; description: string; jsonLd?: object }
+import { CITIES } from '../lib/cities';
+import { existsSync } from 'node:fs';
+interface Props { title: string; description: string; jsonLd?: object; image?: string }
 const { title, description, jsonLd } = Astro.props;
+// Link previews (WhatsApp, Instagram, X). Drop a 1200x630 image at public/og.jpg and every page uses it.
+const defaultImage = ['og.jpg', 'og.png'].find((f) => existsSync(`public/${f}`));
+const image = Astro.props.image ?? (defaultImage ? `/${defaultImage}` : undefined);
+// Set these in Vercel > Settings > Environment Variables. Nothing is added until they exist.
+const umamiId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
+const googleVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
 const fullTitle = title === SITE.name ? `${SITE.name} | Fine perfumes in Jos, delivered across Nigeria` : `${title} | ${SITE.name}`;
 const path = Astro.url.pathname;
 const nav = [
@@ -14,6 +22,7 @@ const nav = [
   { href: '/visit/', label: 'Visit & delivery' },
 ];
 const canonical = new URL(path, SITE.url).href;
+const imageUrl = image && new URL(image, SITE.url).href;
 const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosing a perfume.';
 ---
 <!doctype html>
@@ -29,8 +38,26 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content="en_NG" />
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+    <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
+    {googleVerification && <meta name="google-site-verification" content={googleVerification} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {umamiId && <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id={umamiId} data-domains={new URL(SITE.url).hostname}></script>}
+    {umamiId && (
+      <script is:inline>
+        // Every WhatsApp tap is a lead. Record where it happened and, on product buttons, which perfume.
+        document.addEventListener('click', function (e) {
+          var a = e.target.closest && e.target.closest('a[href^="https://wa.me/"]');
+          if (!a || !window.umami) return;
+          var data = { spot: a.dataset.wa || 'other', page: location.pathname };
+          if (a.dataset.perfume) data.perfume = a.dataset.perfume;
+          window.umami.track('WhatsApp click', data);
+        });
+      </script>
+    )}
   </head>
   <body>
     <BottleDefs />
@@ -52,7 +79,7 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
             ))}
           </ul>
         </nav>
-        <a class="header-wa" href={waLink(helpMsg)} target="_blank" rel="noopener"><WaIcon /><span>Chat with Biba</span></a>
+        <a class="header-wa" href={waLink(helpMsg)} target="_blank" rel="noopener" data-wa="header"><WaIcon /><span>Chat with Biba</span></a>
       </div>
     </header>
     <main id="main">
@@ -73,8 +100,9 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
           </div>
           <div>
             <h2>Order</h2>
-            <p><a class="link" href={waLink('Hi Biba, I’d like to place an order.')} target="_blank" rel="noopener">WhatsApp {SITE.phoneDisplay}</a></p>
+            <p><a class="link" href={waLink('Hi Biba, I’d like to place an order.')} target="_blank" rel="noopener" data-wa="footer">WhatsApp {SITE.phoneDisplay}</a></p>
             <p>{SITE.delivery}</p>
+            <p>We deliver to {CITIES.map((c, i) => <>{i > 0 && ', '}<a class="link" href={`/delivery/${c.slug}/`}>{c.name}</a></>)} and the rest of Nigeria.</p>
           </div>
           <div>
             <h2>Follow</h2>
@@ -84,7 +112,7 @@ const helpMsg = 'Hi Biba, I’m on your website and I’d like some help choosin
         <p class="fineprint">“Smells like” comparisons describe a scent’s style only. Scents by Biba is not linked to those brands, and inspired perfumes are not the original products. Prices marked “About” are for perfumes we order in for you; Biba confirms the final price on WhatsApp before you pay.</p>
       </div>
     </footer>
-    <a class="float-wa" href={waLink(helpMsg)} target="_blank" rel="noopener" aria-label="Chat with Biba on WhatsApp"><WaIcon /></a>
+    <a class="float-wa" href={waLink(helpMsg)} target="_blank" rel="noopener" data-wa="floating" aria-label="Chat with Biba on WhatsApp"><WaIcon /></a>
   </body>
 </html>
 

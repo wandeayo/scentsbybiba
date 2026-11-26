@@ -1,9 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
 import WaIcon from '../components/WaIcon.astro';
-import { SITE, waLink } from '../lib/site';
+import { SITE, waLink, graph, storeJsonLd } from '../lib/site';
+import { CITIES } from '../lib/cities';
 ---
-<Base title="Visit the store and delivery" description={`Scents by Biba, ${SITE.address}. Open ${SITE.hours}. ${SITE.delivery}.`}>
+<Base title="Visit the store and delivery" description={`Scents by Biba, ${SITE.address}. Open ${SITE.hours}. ${SITE.delivery}.`} jsonLd={graph(storeJsonLd(CITIES.map((c) => c.name)))}>
   <section class="wrap visit">
     <div class="ornament"><i></i></div>
     <h1>Visit the boutique, or have it delivered</h1>
@@ -17,8 +18,9 @@ import { SITE, waLink } from '../lib/site';
       <div class="block">
         <h2>Delivery</h2>
         <p>{SITE.delivery}, depending on where you are.</p>
+        <p>Ordering from {CITIES.map((c, i) => <>{i > 0 && (i === CITIES.length - 1 ? ' or ' : ', ')}<a class="link" href={`/delivery/${c.slug}/`}>{c.name}</a></>)}? See what Biba recommends for your city.</p>
         <p>Delivery isn’t free. Biba tells you the fee for your area on WhatsApp before you pay, so there are no surprises.</p>
-        <a class="btn btn-noir" href={waLink('Hi Biba, how much is delivery to ')} target="_blank" rel="noopener"><WaIcon />Ask about delivery to your area</a>
+        <a class="btn btn-noir" href={waLink('Hi Biba, how much is delivery to ')} target="_blank" rel="noopener" data-wa="visit-delivery"><WaIcon />Ask about delivery to your area</a>
       </div>
       <div class="block">
         <h2>How ordering works</h2>

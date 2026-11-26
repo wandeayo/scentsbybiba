@@ -92,7 +92,7 @@ const starters = [
       const extra = parsed.max && parsed.max < 17000 ? ' Full bottles start around ₦17,000, but minis, oils and mists fit that budget.' : '';
       summary.textContent = `Nothing matched “${query}” exactly.`;
       list.innerHTML = `<div class="ask-empty"><p>${esc(extra)} Biba can find it for you. Send her what you’re looking for and she’ll reply with options.</p>
-        <a class="btn btn-noir" href="${wa(`Hi Biba, I’m looking for ${query}. Can you help?`)}" target="_blank" rel="noopener">Ask Biba on WhatsApp</a></div>`;
+        <a class="btn btn-noir" href="${wa(`Hi Biba, I’m looking for ${query}. Can you help?`)}" target="_blank" rel="noopener" data-wa="search-no-match">Ask Biba on WhatsApp</a></div>`;
       return;
     }
     summary.textContent = hits.length === 1 ? 'Biba’s pick for you' : `${hits.length} picks for “${query}”`;
@@ -106,7 +106,7 @@ const starters = [
           ${it.b ? `<p class="tile-brand">${esc(it.b)}</p>` : ''}
           <p class="tile-family">${esc(why.join(', '))}</p>
           <p class="price">${priceText(it)}</p>
-          <a class="tile-order" href="${wa(msg)}" target="_blank" rel="noopener">Order on WhatsApp</a>
+          <a class="tile-order" href="${wa(msg)}" target="_blank" rel="noopener" data-wa="search" data-perfume="${esc(it.n)}">Order on WhatsApp</a>
         </div>
       </article>`;
     }).join('');
